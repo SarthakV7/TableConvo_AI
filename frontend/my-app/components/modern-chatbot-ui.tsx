@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { Switch } from '@/components/ui/switch'
-import { Mic, Play, Pause, Upload, Send, Mail, Linkedin, Github, Globe, List, Layers, X, BarChart } from 'lucide-react'
+import { Mic, Play, Pause, Upload, Send, Mail, Linkedin, Github, Globe, List, Layers, X, BarChart, Code } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
@@ -30,6 +30,7 @@ interface Message {
   type: 'user' | 'bot'
   content: string
   visualize_data: VisualizeData | null
+  sql_query: string | null  // Add this line
 }
 
 export function useTypewriter(text: string, speed: number = 10) {
@@ -113,7 +114,6 @@ const VisualizationPopup = ({ data, onClose }) => {
     '#EBE6DE'
   ]
 
-  // Function to get random colors from the palette
   const getRandomColors = (count: number) => {
     const shuffled = [...colorPalette].sort(() => 0.5 - Math.random());
     return shuffled.slice(0, count);
@@ -127,7 +127,7 @@ const VisualizationPopup = ({ data, onClose }) => {
       {
         label: data.title,
         data: data.data,
-        backgroundColor: randomColors.map(color => `${color}CC`), // CC adds 80% opacity
+        backgroundColor: randomColors.map(color => `${color}CC`),
         borderColor: randomColors,
         borderWidth: 1,
       },
@@ -141,7 +141,7 @@ const VisualizationPopup = ({ data, onClose }) => {
       legend: {
         position: 'top' as const,
         labels: {
-          color: '#333333',
+          color: '#F4EBD0',
           font: {
             size: 12,
           },
@@ -150,21 +150,21 @@ const VisualizationPopup = ({ data, onClose }) => {
       title: {
         display: true,
         text: data.title,
-        color: '#333333',
+        color: '#F4EBD0',
         font: {
-          size: 14,
+          size: 16,
           weight: 'bold',
         },
       },
     },
     scales: {
       x: {
-        ticks: { color: '#333333', font: { size: 10 } },
-        grid: { color: 'rgba(51, 51, 51, 0.1)' },
+        ticks: { color: '#F4EBD0', font: { size: 10 } },
+        grid: { color: 'rgba(244, 235, 208, 0.1)' },
       },
       y: {
-        ticks: { color: '#333333', font: { size: 10 } },
-        grid: { color: 'rgba(51, 51, 51, 0.1)' },
+        ticks: { color: '#F4EBD0', font: { size: 10 } },
+        grid: { color: 'rgba(244, 235, 208, 0.1)' },
       },
     },
   }
@@ -178,7 +178,7 @@ const VisualizationPopup = ({ data, onClose }) => {
         position: 'bottom' as const,
       },
     },
-    scales: undefined, // Remove scales for Pie chart
+    scales: undefined,
   }
 
   const renderChart = () => {
@@ -194,23 +194,23 @@ const VisualizationPopup = ({ data, onClose }) => {
       case 'Histogram':
         return <Bar data={chartConfig} options={options} />
       default:
-        return <p>Unsupported chart type</p>
+        return <p className="text-[#F4EBD0]">Unsupported chart type</p>
     }
   }
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50">
-      <div className="bg-[#EBE6DE] border border-[#A4863D] rounded-lg p-6 w-[70vw] h-[70vh] flex flex-col shadow-2xl">
+      <div className="bg-black bg-opacity-70 border border-[#A4863D] rounded-lg p-6 w-[70vw] h-[70vh] flex flex-col shadow-2xl backdrop-filter backdrop-blur-lg">
         <div className="flex justify-between items-center mb-2">
-          <h2 className="text-xl font-bold text-[#333333]">{data.title}</h2>
+          <h2 className="text-xl font-bold text-[#F4EBD0]">{data.title}</h2>
           <button
             onClick={onClose}
-            className="text-[#333333] hover:text-[#A25524] transition-colors"
+            className="text-[#F4EBD0] hover:text-[#A25524] transition-colors"
           >
             <X size={24} />
           </button>
         </div>
-        <div className="flex-grow bg-[#E6E6FA] rounded-lg p-4 overflow-hidden" style={{ height: 'calc(95vh - 4rem)' }}>
+        <div className="flex-grow bg-black bg-opacity-50 rounded-lg p-4 overflow-hidden backdrop-filter backdrop-blur-md" style={{ height: 'calc(80vh - 4rem)' }}>
           <div className="w-full h-full">
             {renderChart()}
           </div>
@@ -220,7 +220,28 @@ const VisualizationPopup = ({ data, onClose }) => {
   )
 }
 
-const MessageContent = ({ content, isUser, visualize_data, onVisualize }) => {
+const SqlQueryPopup = ({ query, onClose }) => {
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50">
+      <div className="bg-black bg-opacity-70 border border-[#A4863D] rounded-lg p-6 w-[70vw] h-[30vh] flex flex-col shadow-2xl backdrop-filter backdrop-blur-lg">
+        <div className="flex justify-between items-center mb-2">
+          <h2 className="text-xl font-bold text-[#F4EBD0]">SQL Query</h2>
+          <button
+            onClick={onClose}
+            className="text-[#F4EBD0] hover:text-[#A25524] transition-colors"
+          >
+            <X size={24} />
+          </button>
+        </div>
+        <div className="flex-grow bg-black bg-opacity-50 rounded-lg p-4 overflow-auto backdrop-filter backdrop-blur-md" style={{ height: 'calc(95vh - 4rem)' }}>
+          <pre className="text-[#F4EBD0] whitespace-pre-wrap font-mono text-sm">{query}</pre>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+const MessageContent = ({ content, isUser, visualize_data, sql_query, onVisualize, onShowSqlQuery }) => {
   const typedContent = useTypewriter(content, 5);
 
   if (isUser) {
@@ -228,7 +249,7 @@ const MessageContent = ({ content, isUser, visualize_data, onVisualize }) => {
   }
 
   return (
-    <div className="relative pr-8"> {/* Added right padding */}
+    <div className="relative">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{
@@ -263,14 +284,24 @@ const MessageContent = ({ content, isUser, visualize_data, onVisualize }) => {
       >
         {typedContent}
       </ReactMarkdown>
-      {visualize_data && (
-        <button
-          onClick={onVisualize}
-          className="absolute top-0 right-0 p-1 bg-black bg-opacity-50 rounded-full hover:bg-opacity-70 transition-colors transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#F4EBD0]"
-        >
-          <BarChart size={16} className="text-[#F4EBD0]" />
-        </button>
-      )}
+      <div className="absolute bottom-0 right-0 flex space-x-2 mt-2">
+        {sql_query && (
+          <button
+            onClick={onShowSqlQuery}
+            className="p-1 bg-black bg-opacity-50 rounded-full hover:bg-opacity-70 transition-colors transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#F4EBD0]"
+          >
+            <Code size={16} className="text-[#F4EBD0]" />
+          </button>
+        )}
+        {visualize_data && (
+          <button
+            onClick={onVisualize}
+            className="p-1 bg-black bg-opacity-50 rounded-full hover:bg-opacity-70 transition-colors transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#F4EBD0]"
+          >
+            <BarChart size={16} className="text-[#F4EBD0]" />
+          </button>
+        )}
+      </div>
     </div>
   );
 };
@@ -414,6 +445,8 @@ export function ModernChatbotUi() {
   const [isVisualizationVisible, setIsVisualizationVisible] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [currentVisualization, setCurrentVisualization] = useState<VisualizeData | null>(null)
+  const [sqlQuery, setSqlQuery] = useState<string | null>(null)
+  const [isSqlQueryVisible, setIsSqlQueryVisible] = useState(false)
 
   useEffect(() => {
     setSidebarWidth(isSidebarOpen ? 256 : 32);
@@ -466,7 +499,7 @@ export function ModernChatbotUi() {
         if (progress >= 100) {
           clearInterval(interval);
           setIsUploading(false);
-          setMessages(prev => [...prev, { type: 'user', content: `File uploaded successfully: ${file.name}`, visualize_data: null }]);
+          setMessages(prev => [...prev, { type: 'user', content: `File uploaded successfully: ${file.name}`, visualize_data: null, sql_query: null }]);
         }
       }, 200);
     }
@@ -483,7 +516,7 @@ export function ModernChatbotUi() {
     e.preventDefault();
     if (input.trim() === '' && !uploadedFile) return;
 
-    setMessages(prev => [...prev, { type: 'user', content: input || 'File uploaded', visualize_data: null }]);
+    setMessages(prev => [...prev, { type: 'user', content: input || 'File uploaded', visualize_data: null, sql_query: null }]);
     setInput('');
     setIsLoading(true);
 
@@ -522,17 +555,22 @@ export function ModernChatbotUi() {
       }
 
       const data = await response.json();
+      if (data.sql_query) {
+        setSqlQuery(data.sql_query)
+      }
       setMessages(prev => [...prev, { 
         type: 'bot', 
         content: data.response, 
-        visualize_data: data.visualize_data 
+        visualize_data: data.visualize_data,
+        sql_query: data.sql_query || null  // Add this line
       }]);
     } catch (error) {
       console.error('Error:', error);
       setMessages(prev => [...prev, { 
         type: 'bot', 
         content: `Sorry, there was an error processing your request. Error details: ${error.message}`, 
-        visualize_data: null 
+        visualize_data: null, 
+        sql_query: null  // Add this line
       }]);
     } finally {
       setIsLoading(false);
@@ -576,6 +614,13 @@ export function ModernChatbotUi() {
     setIsVisualizationVisible(false)
     setCurrentVisualization(null)
   }
+
+  const handleShowSqlQuery = useCallback((query: string | null) => {
+    if (query) {
+      setSqlQuery(query);
+      setIsSqlQueryVisible(true);
+    }
+  }, []);
 
   return (
     <div className="flex flex-col min-h-screen bg-black text-black">
@@ -709,7 +754,9 @@ export function ModernChatbotUi() {
                             content={message.content} 
                             isUser={message.type === 'user'} 
                             visualize_data={message.visualize_data}
+                            sql_query={message.sql_query}
                             onVisualize={() => handleVisualize(message.visualize_data)}
+                            onShowSqlQuery={() => handleShowSqlQuery(message.sql_query)}
                           />
                         </div>
                       </div>
@@ -766,6 +813,12 @@ export function ModernChatbotUi() {
       {/* Visualization Popup */}
       {isVisualizationVisible && (
         <VisualizationPopup data={currentVisualization} onClose={closeVisualization} />
+      )}
+      {isSqlQueryVisible && sqlQuery && (
+        <SqlQueryPopup
+          query={sqlQuery}
+          onClose={() => setIsSqlQueryVisible(false)}
+        />
       )}
     </div>
   );

@@ -10,6 +10,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from uuid import uuid4
 import argparse  # Add this import
+from langchain_core.callbacks.base import BaseCallbackHandler
+from typing import Dict, List, Any
 
 warnings.filterwarnings("ignore")
 
@@ -37,6 +39,14 @@ def create_llm_instances(api_key):
         temperature=0.7,
         openai_api_key=api_key,
     )
+
+class SQLCallbackHandler(BaseCallbackHandler):
+    def __init__(self):
+        self.sql_queries = []
+
+    def on_agent_action(self, action, **kwargs):
+        if action.tool in ["sql_db_query_checker","sql_db_query"]:
+            self.sql_queries.append(action.tool_input)
 
 @app.post("/upload_and_query")
 async def upload_and_query(
@@ -70,17 +80,24 @@ async def upload_and_query(
         # Load memory for this session
         memory = load_memory(session_id)
 
+        sql_callback = SQLCallbackHandler()
+
         # Create the SQL agent with loaded memory
         agent_executor = create_sql_agent(
             llm,
             db=db,
             agent_type="openai-tools",
             memory=memory,
-            verbose=False
+            verbose=False,  # Set to True to see detailed output
         )
         # Run the agent with the provided query
-        response = agent_executor.invoke({"input": query})
+        response = agent_executor.invoke({"input": query}, {"callbacks": [sql_callback]})
         
+        if sql_callback.sql_queries:
+            sql_query = sql_callback.sql_queries[-1]['query']
+        else:
+            sql_query = None
+
         # Extract the output as a string
         output = response['output']
 
@@ -91,7 +108,7 @@ async def upload_and_query(
         # Save updated memory
         save_memory(session_id, query, output)
         
-        return JSONResponse(content={"response": output, "session_id": session_id, "visualize_data": visualize_data})
+        return JSONResponse(content={"response": output, "session_id": session_id, "visualize_data": visualize_data, "sql_query": sql_query})
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -102,7 +119,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run the FastAPI server with OpenAI API key")
     parser.add_argument("--api_key", required=True, help="OpenAI API key")
     args = parser.parse_args()
-    
     # Create LLM instances with the provided API key
     llm, llm_visualize = create_llm_instances(args.api_key)
     
