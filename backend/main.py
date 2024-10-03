@@ -2,6 +2,7 @@ import os
 import shutil
 import warnings
 from langchain.chat_models import ChatOpenAI
+from langchain_google_genai import ChatGoogleGenerativeAI  # Add this import
 from langchain_community.agent_toolkits import create_sql_agent
 from functs import load_data_to_sqlite, load_existing_db, save_memory, load_memory, clear_data_folder, analyze_text_for_visualization
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException
@@ -26,17 +27,30 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Update the function to include model_name
+# Update the function to include model_name and handle both ChatGPT and Gemini Pro
 def create_llm_instances(api_key, model_name):
-    return ChatOpenAI(
-        model=model_name,
-        temperature=0,
-        openai_api_key=api_key,
-    ), ChatOpenAI(
-        model=model_name,
-        temperature=0.7,
-        openai_api_key=api_key,
-    )
+    if model_name.startswith("gpt-"):
+        return ChatOpenAI(
+            model=model_name,
+            temperature=0,
+            openai_api_key=api_key,
+        ), ChatOpenAI(
+            model=model_name,
+            temperature=0.7,
+            openai_api_key=api_key,
+        )
+    elif model_name == "gemini-pro":
+        return ChatGoogleGenerativeAI(
+            model=model_name,
+            temperature=0,
+            google_api_key=api_key,
+        ), ChatGoogleGenerativeAI(
+            model=model_name,
+            temperature=0.7,
+            google_api_key=api_key,
+        )
+    else:
+        raise ValueError(f"Unsupported model: {model_name}")
 
 @app.post("/upload_and_query")
 async def upload_and_query(
@@ -99,9 +113,9 @@ if __name__ == "__main__":
     import uvicorn
     
     # Set up argument parser
-    parser = argparse.ArgumentParser(description="Run the FastAPI server with OpenAI API key and model name")
-    parser.add_argument("--api_key", required=True, help="OpenAI API key")
-    parser.add_argument("--model_name", default="gpt-4o-mini", help="OpenAI model name")
+    parser = argparse.ArgumentParser(description="Run the FastAPI server with API key and model name")
+    parser.add_argument("--api_key", required=True, help="API key (OpenAI or Google)")
+    parser.add_argument("--model_name", default="gpt-4-mini", help="Model name (e.g., gpt-4-mini, gemini-pro)")
     args = parser.parse_args()
     
     # Create LLM instances with the provided API key and model name
