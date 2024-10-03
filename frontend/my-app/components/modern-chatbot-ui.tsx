@@ -5,14 +5,14 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useDropzone } from 'react-dropzone'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { Upload, Send, Mail, Linkedin, Github, Globe, Layers, X, BarChart, Code } from 'lucide-react'
+import { Mic, Play, Pause, Upload, Send, Mail, Linkedin, Github, Globe, List, Layers, X, BarChart, Code } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { atomDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { v4 as uuidv4 } from 'uuid';
 import { Bar, Line, Pie, Scatter } from 'react-chartjs-2'
-import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, BarElement, ArcElement, Title, Tooltip, Legend, ChartOptions } from 'chart.js'
+import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, BarElement, ArcElement, Title, Tooltip, Legend } from 'chart.js'
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, ArcElement, Title, Tooltip, Legend)
 
@@ -67,6 +67,36 @@ const AnimatedEllipsis = () => {
   );
 };
 
+const VisualizeButton = ({ onClick }) => (
+  <button
+    onClick={onClick}
+    className="absolute top-2 right-2 p-1 bg-black bg-opacity-50 rounded-full hover:bg-opacity-70 transition-colors"
+  >
+    <BarChart size={16} className="text-[#F4EBD0]" />
+  </button>
+);
+
+const VisualizationModal = ({ isOpen, onClose }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-[#F4EBD0] p-6 rounded-lg w-3/4 h-3/4 relative">
+        <button
+          onClick={onClose}
+          className="absolute top-2 right-2 text-black hover:text-gray-700"
+        >
+          <X size={24} />
+        </button>
+        <h2 className="text-2xl font-bold mb-4">Data Visualization</h2>
+        <div className="w-full h-5/6 bg-gray-200 flex items-center justify-center">
+          <p className="text-xl text-gray-600">Dummy Visualization Placeholder</p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const VisualizationPopup = ({ data, onClose }) => {
   if (!data) return null
 
@@ -101,7 +131,7 @@ const VisualizationPopup = ({ data, onClose }) => {
     ],
   }
 
-  const options: ChartOptions<'bar'> = {
+  const options = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
@@ -120,7 +150,7 @@ const VisualizationPopup = ({ data, onClose }) => {
         color: '#F4EBD0',
         font: {
           size: 16,
-          weight: 700, // Changed from 'bold' to 700
+          weight: 'bold',
         },
       },
     },
@@ -287,6 +317,7 @@ const ToggleViewButton = ({ onClick, isOverlayVisible }) => (
 const ScrollableOverlay = ({ 
   messages, 
   isVisible, 
+  onToggle, 
   scrollPageToBottom
 }) => {
   useEffect(() => {
@@ -355,9 +386,52 @@ const FixedOverlay = ({ isFileUploaded, fileName, onToggleView, onRemoveFile, si
   </div>
 );
 
+const handleFileUpload = async (file: File, sessionId: string | null) => {
+  if (!sessionId) return; // Ensure we have a session ID
+
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('session_id', sessionId);
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 seconds timeout
+
+  try {
+    const response = await fetch('http://localhost:8000/upload_and_query', {
+      method: 'POST',
+      body: formData,
+      signal: controller.signal
+    });
+
+    if (!response.ok) {
+      throw new Error('Upload failed');
+    }
+
+    const result = await response.json();
+    console.log('Upload successful:', result);
+
+    setFileUploaded(true);
+    setUploadedFile(file);
+
+  } catch (error) {
+    if (error.name === 'AbortError') {
+      console.log('Upload aborted');
+    } else {
+      console.error('Upload error:', error);
+    }
+    // Handle the error (e.g., show error message to user)
+  } finally {
+    clearTimeout(timeoutId);
+  }
+};
+
 export function ModernChatbotUi() {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
+  const [isRecording, setIsRecording] = useState(false)
+  const [isPlaying, setIsPlaying] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState(0)
+  const [isUploading, setIsUploading] = useState(false)
   const [uploadedFile, setUploadedFile] = useState<File | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [fileUploaded, setFileUploaded] = useState(false);
@@ -388,11 +462,11 @@ export function ModernChatbotUi() {
     setSessionId(existingSessionId);
   }, []);
 
-  useEffect(() => {
+  const scrollToBottom = () => {
     if (chatContainerRef.current) {
       chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
     }
-  }, [messages]);
+  };
 
   const scrollPageToBottom = () => {
     window.scrollTo({
@@ -429,6 +503,11 @@ export function ModernChatbotUi() {
   }, []);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop })
+
+  const handleMouseMove = (event: React.MouseEvent) => {
+    cursorX.set(event.clientX)
+    cursorY.set(event.clientY)
+  }
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -495,9 +574,25 @@ export function ModernChatbotUi() {
     }
   };
 
-  const toggleScrollableOverlay = (_e) => {
+  const toggleRecording = () => {
+    setIsRecording(!isRecording)
+    // Here you would implement actual voice recording logic
+  }
+
+  const togglePlayback = () => {
+    if (audioRef.current) {
+      if (isPlaying) {
+        audioRef.current.pause()
+      } else {
+        audioRef.current.play()
+      }
+      setIsPlaying(!isPlaying)
+    }
+  }
+
+  const toggleScrollableOverlay = (e) => {
     // Prevent toggling when clicking on the file upload area
-    if (_e.target.closest('.file-upload-area')) return;
+    if (e.target.closest('.file-upload-area')) return;
     setIsScrollableOverlayVisible(!isScrollableOverlayVisible);
   };
 
@@ -627,7 +722,7 @@ export function ModernChatbotUi() {
                     {isDragActive ? (
                       <p className="text-[#F4EBD0]">Drop the files here ...</p>
                     ) : (
-                      <p className="text-[#F4EBD0]">Drag &apos;n&apos; drop some files here, or click to select files</p>
+                      <p className="text-[#F4EBD0]">Drag 'n' drop some files here, or click to select files</p>
                     )}
                   </div>
                 )}
@@ -682,6 +777,7 @@ export function ModernChatbotUi() {
             <ScrollableOverlay 
               messages={messages}
               isVisible={isScrollableOverlayVisible}
+              onToggle={toggleScrollableOverlay}
               scrollPageToBottom={scrollPageToBottom}
             />
           </div>

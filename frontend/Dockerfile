@@ -13,11 +13,8 @@ RUN npm install
 # Copy the rest of the application code
 COPY my-app/ .
 
-# Build the Next.js application
-RUN npm run build
-
 # Expose the port the app runs on
 EXPOSE 3000
 
-# Define the command to run the app
-CMD ["npm", "start"]
+# Define the command to run the app in development mode
+CMD ["npm", "run", "dev"]
