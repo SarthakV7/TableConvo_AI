@@ -5,7 +5,7 @@ import requests
 from langchain.chat_models import ChatOpenAI
 from langchain_google_genai import ChatGoogleGenerativeAI  # Add this import
 from langchain_community.agent_toolkits import create_sql_agent
-from functs import load_data_to_sqlite, load_existing_db, save_memory, load_memory, clear_data_folder, analyze_text_for_visualization
+from functs import load_data_to_sqlite, load_existing_db, save_memory, load_memory, clear_data_folder, analyze_text_for_visualization, fetch_gemini_api_key
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse

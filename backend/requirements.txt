@@ -32,11 +32,18 @@ filelock==3.16.1
 flatbuffers==24.3.25
 frozenlist==1.4.1
 fsspec==2024.9.0
+google-ai-generativelanguage==0.6.6
+google-api-core==2.20.0
+google-api-python-client==2.147.0
 google-auth==2.35.0
+google-auth-httplib2==0.2.0
+google-generativeai==0.7.2
 googleapis-common-protos==1.65.0
 grpcio==1.66.1
+grpcio-status==1.62.3
 h11==0.14.0
 httpcore==1.0.5
+httplib2==0.22.0
 httptools==0.6.1
 httpx==0.27.2
 huggingface-hub==0.25.1
@@ -57,6 +64,7 @@ langchain==0.3.1
 langchain-community==0.3.1
 langchain-core==0.3.6
 langchain-experimental==0.3.2
+langchain-google-genai==2.0.0
 langchain-text-splitters==0.3.0
 langsmith==0.1.128
 markdown-it-py==3.0.0
@@ -93,6 +101,7 @@ pickleshare @ file:///home/conda/feedstock_root/build_artifacts/pickleshare_1602
 platformdirs @ file:///home/conda/feedstock_root/build_artifacts/platformdirs_1726613481435/work
 posthog==3.6.6
 prompt_toolkit @ file:///home/conda/feedstock_root/build_artifacts/prompt-toolkit_1727341649933/work
+proto-plus==1.24.0
 protobuf==4.25.5
 psutil @ file:///private/var/folders/nz/j6p8yfhx1mv_0grj5xl4650h0000gp/T/abs_1310b568-21f4-4cb0-b0e3-2f3d31e39728k9coaga5/croots/recipe/psutil_1656431280844/work
 ptyprocess @ file:///home/conda/feedstock_root/build_artifacts/ptyprocess_1609419310487/work/dist/ptyprocess-0.7.0-py2.py3-none-any.whl
@@ -104,6 +113,7 @@ pydantic==2.9.2
 pydantic-settings==2.5.2
 pydantic_core==2.23.4
 Pygments @ file:///home/conda/feedstock_root/build_artifacts/pygments_1714846767233/work
+pyparsing==3.1.4
 PyPika==0.48.9
 pyproject_hooks==1.1.0
 pyprojroot==0.3.0
@@ -135,6 +145,7 @@ typer==0.12.5
 typing-inspect==0.9.0
 typing_extensions @ file:///home/conda/feedstock_root/build_artifacts/typing_extensions_1717802530399/work
 tzdata==2024.2
+uritemplate==4.1.1
 urllib3==2.2.3
 uvicorn==0.30.6
 uvloop==0.20.0
