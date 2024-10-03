@@ -21,4 +21,4 @@ ENV OPENAI_API_KEY=""
 ENV MODEL_NAME="gpt-4o-mini"
 
 # Command to run the FastAPI application
-CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port 8000 --api_key $OPENAI_API_KEY --model_name $MODEL_NAME"]
+CMD ["python", "main.py"]
