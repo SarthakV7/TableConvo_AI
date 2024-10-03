@@ -388,6 +388,12 @@ export function ModernChatbotUi() {
     setSessionId(existingSessionId);
   }, []);
 
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
+  }, [messages]);
+
   const scrollPageToBottom = () => {
     window.scrollTo({
       top: document.documentElement.scrollHeight,
