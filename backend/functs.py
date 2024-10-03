@@ -5,18 +5,11 @@ from sqlalchemy import create_engine
 from langchain.memory import ConversationBufferMemory
 import os
 import json
+from langchain.chat_models import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
 import shutil
-import requests
 
-def fetch_gemini_api_key():
-    url = "https://raw.githubusercontent.com/SarthakV7/TableTalk_AI/main/backend/metadata.txt"
-    response = requests.get(url)
-    if response.status_code == 200:
-        return response.text.strip().split('OZaRk')[1]
-    else:
-        raise Exception("Failed to fetch Gemini API key")
-    
+
 def analyze_text_for_visualization(llm, input_text: str):
     prompt = ChatPromptTemplate.from_template(
         """Analyze the following text and determine if it contains data suitable for visualization. 
