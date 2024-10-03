@@ -1,23 +1,28 @@
 'use client'
 
-import { useState, useRef, useCallback, useEffect } from 'react'
-import { motion, useMotionValue, useSpring, AnimatePresence } from 'framer-motion'
-import { useDropzone } from 'react-dropzone'
-import { Card } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
+import React, { useState, useRef, useEffect } from 'react'
+// import { useMotionValue, useSpring } from 'framer-motion'
 import { Button } from '@/components/ui/button'
-import { Progress } from '@/components/ui/progress'
-import { Switch } from '@/components/ui/switch'
-import { Mic, Play, Pause, Upload, Send, Mail, Linkedin, Github, Globe, List, Layers, X, BarChart, Code } from 'lucide-react'
-import ReactMarkdown from 'react-markdown'
-import remarkGfm from 'remark-gfm'
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { atomDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
-import { v4 as uuidv4 } from 'uuid';
-import { Bar, Line, Pie, Scatter } from 'react-chartjs-2'
-import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, BarElement, ArcElement, Title, Tooltip, Legend } from 'chart.js'
-
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, ArcElement, Title, Tooltip, Legend)
+// import { Card } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+// import { Progress } from '@/components/ui/progress'
+// import { Switch } from '@/components/ui/switch'
+// import { Mic, Play, Pause, Send, Upload, X, ChevronRight, ChevronLeft, List } from 'lucide-react'
+import { Send, Upload, X, ChevronRight, ChevronLeft } from 'lucide-react'
+import { useDropzone } from 'react-dropzone'
+import { motion } from 'framer-motion'
+import { useTypewriter } from './useTypewriter'
+import { AnimatedEllipsis } from './AnimatedEllipsis'
+import { VisualizeButton } from './VisualizeButton'
+import { VisualizationModal } from './VisualizationModal'
+import { VisualizationPopup } from './VisualizationPopup'
+import { SqlQueryPopup } from './SqlQueryPopup'
+import { MessageContent } from './MessageContent'
+import { ToggleViewButton } from './ToggleViewButton'
+import { ScrollableOverlay } from './ScrollableOverlay'
+import { FixedOverlay } from './FixedOverlay'
+import { handleFileUpload } from './handleFileUpload'
+import { v4 as uuidv4 } from 'uuid'
 
 interface VisualizeData {
   chartType: 'Bar Chart' | 'Line Chart' | 'Pie Chart' | 'Scatter Plot' | 'Histogram'
@@ -33,408 +38,11 @@ interface Message {
   sql_query: string | null  // Add this line
 }
 
-export function useTypewriter(text: string, speed: number = 10) {
-  const [displayedText, setDisplayedText] = useState('');
-
-  useEffect(() => {
-    let i = 0;
-    const typingEffect = setInterval(() => {
-      if (i < text.length) {
-        setDisplayedText((prev) => prev + text.charAt(i));
-        i++;
-      } else {
-        clearInterval(typingEffect);
-      }
-    }, speed);
-
-    return () => clearInterval(typingEffect);
-  }, [text, speed]);
-
-  return displayedText;
-}
-
-const AnimatedEllipsis = () => {
-  return (
-    <div className="flex space-x-1">
-      {[0, 1, 2].map((dot) => (
-        <div
-          key={dot}
-          className="w-2 h-2 bg-[#F4EBD0] rounded-full animate-bounce"
-          style={{
-            animationDelay: `${dot * 0.1}s`,
-            animationDuration: '0.6s',
-          }}
-        ></div>
-      ))}
-    </div>
-  );
-};
-
-const VisualizeButton = ({ onClick }) => (
-  <button
-    onClick={onClick}
-    className="absolute top-2 right-2 p-1 bg-black bg-opacity-50 rounded-full hover:bg-opacity-70 transition-colors"
-  >
-    <BarChart size={16} className="text-[#F4EBD0]" />
-  </button>
-);
-
-const VisualizationModal = ({ isOpen, onClose }) => {
-  if (!isOpen) return null;
-
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-[#F4EBD0] p-6 rounded-lg w-3/4 h-3/4 relative">
-        <button
-          onClick={onClose}
-          className="absolute top-2 right-2 text-black hover:text-gray-700"
-        >
-          <X size={24} />
-        </button>
-        <h2 className="text-2xl font-bold mb-4">Data Visualization</h2>
-        <div className="w-full h-5/6 bg-gray-200 flex items-center justify-center">
-          <p className="text-xl text-gray-600">Dummy Visualization Placeholder</p>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const VisualizationPopup = ({ data, onClose }) => {
-  if (!data) return null
-
-  const colorPalette = [
-    '#A4863D',
-    '#E6E6FA',
-    '#EDE7C7',
-    '#E8C9CF',
-    '#B76E79',
-    '#A25524',
-    '#808000',
-    '#EBE6DE'
-  ]
-
-  const getRandomColors = (count: number) => {
-    const shuffled = [...colorPalette].sort(() => 0.5 - Math.random());
-    return shuffled.slice(0, count);
-  }
-
-  const randomColors = getRandomColors(data.data.length);
-
-  const chartConfig = {
-    labels: data.labels,
-    datasets: [
-      {
-        label: data.title,
-        data: data.data,
-        backgroundColor: randomColors.map(color => `${color}CC`),
-        borderColor: randomColors,
-        borderWidth: 1,
-      },
-    ],
-  }
-
-  const options = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        position: 'top' as const,
-        labels: {
-          color: '#F4EBD0',
-          font: {
-            size: 12,
-          },
-        },
-      },
-      title: {
-        display: true,
-        text: data.title,
-        color: '#F4EBD0',
-        font: {
-          size: 16,
-          weight: 'bold',
-        },
-      },
-    },
-    scales: {
-      x: {
-        ticks: { color: '#F4EBD0', font: { size: 10 } },
-        grid: { color: 'rgba(244, 235, 208, 0.1)' },
-      },
-      y: {
-        ticks: { color: '#F4EBD0', font: { size: 10 } },
-        grid: { color: 'rgba(244, 235, 208, 0.1)' },
-      },
-    },
-  }
-
-  const pieOptions = {
-    ...options,
-    plugins: {
-      ...options.plugins,
-      legend: {
-        ...options.plugins.legend,
-        position: 'bottom' as const,
-      },
-    },
-    scales: undefined,
-  }
-
-  const renderChart = () => {
-    switch (data.chartType) {
-      case 'Bar Chart':
-        return <Bar data={chartConfig} options={options} />
-      case 'Line Chart':
-        return <Line data={chartConfig} options={options} />
-      case 'Pie Chart':
-        return <Pie data={chartConfig} options={pieOptions} />
-      case 'Scatter Plot':
-        return <Scatter data={chartConfig} options={options} />
-      case 'Histogram':
-        return <Bar data={chartConfig} options={options} />
-      default:
-        return <p className="text-[#F4EBD0]">Unsupported chart type</p>
-    }
-  }
-
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50">
-      <div className="bg-black bg-opacity-70 border border-[#A4863D] rounded-lg p-6 w-[70vw] h-[70vh] flex flex-col shadow-2xl backdrop-filter backdrop-blur-lg">
-        <div className="flex justify-between items-center mb-2">
-          <h2 className="text-xl font-bold text-[#F4EBD0]">{data.title}</h2>
-          <button
-            onClick={onClose}
-            className="text-[#F4EBD0] hover:text-[#A25524] transition-colors"
-          >
-            <X size={24} />
-          </button>
-        </div>
-        <div className="flex-grow bg-black bg-opacity-50 rounded-lg p-4 overflow-hidden backdrop-filter backdrop-blur-md" style={{ height: 'calc(80vh - 4rem)' }}>
-          <div className="w-full h-full">
-            {renderChart()}
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-const SqlQueryPopup = ({ query, onClose }) => {
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50">
-      <div className="bg-black bg-opacity-70 border border-[#A4863D] rounded-lg p-6 w-[70vw] h-[30vh] flex flex-col shadow-2xl backdrop-filter backdrop-blur-lg">
-        <div className="flex justify-between items-center mb-2">
-          <h2 className="text-xl font-bold text-[#F4EBD0]">SQL Query</h2>
-          <button
-            onClick={onClose}
-            className="text-[#F4EBD0] hover:text-[#A25524] transition-colors"
-          >
-            <X size={24} />
-          </button>
-        </div>
-        <div className="flex-grow bg-black bg-opacity-50 rounded-lg p-4 overflow-auto backdrop-filter backdrop-blur-md" style={{ height: 'calc(95vh - 4rem)' }}>
-          <pre className="text-[#F4EBD0] whitespace-pre-wrap font-mono text-sm">{query}</pre>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-const MessageContent = ({ content, isUser, visualize_data, sql_query, onVisualize, onShowSqlQuery }) => {
-  const typedContent = useTypewriter(content, 5);
-
-  if (isUser) {
-    return <p className="text-black">{content}</p>;
-  }
-
-  return (
-    <div className="relative">
-      <ReactMarkdown
-        remarkPlugins={[remarkGfm]}
-        components={{
-          p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
-          a: ({ href, children }) => (
-            <a href={href} className="text-blue-400 hover:underline" target="_blank" rel="noopener noreferrer">
-              {children}
-            </a>
-          ),
-          ul: ({ children }) => <ul className="list-disc list-inside mb-2">{children}</ul>,
-          ol: ({ children }) => <ol className="list-decimal list-inside mb-2">{children}</ol>,
-          li: ({ children }) => <li className="mb-1">{children}</li>,
-          code: ({ node, inline, className, children, ...props }) => {
-            const match = /language-(\w+)/.exec(className || '');
-            return !inline && match ? (
-              <SyntaxHighlighter
-                style={atomDark}
-                language={match[1]}
-                PreTag="div"
-                className="rounded-md my-2"
-                {...props}
-              >
-                {String(children).replace(/\n$/, '')}
-              </SyntaxHighlighter>
-            ) : (
-              <code className="bg-gray-800 rounded px-1" {...props}>
-                {children}
-              </code>
-            );
-          },
-        }}
-      >
-        {typedContent}
-      </ReactMarkdown>
-      <div className="absolute bottom-0 right-0 flex space-x-2 mt-2">
-        {sql_query && (
-          <button
-            onClick={onShowSqlQuery}
-            className="p-1 bg-black bg-opacity-50 rounded-full hover:bg-opacity-70 transition-colors transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#F4EBD0]"
-          >
-            <Code size={16} className="text-[#F4EBD0]" />
-          </button>
-        )}
-        {visualize_data && (
-          <button
-            onClick={onVisualize}
-            className="p-1 bg-black bg-opacity-50 rounded-full hover:bg-opacity-70 transition-colors transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#F4EBD0]"
-          >
-            <BarChart size={16} className="text-[#F4EBD0]" />
-          </button>
-        )}
-      </div>
-    </div>
-  );
-};
-
-const ToggleViewButton = ({ onClick, isOverlayVisible }) => (
-  <motion.button
-    onClick={onClick}
-    className="mr-4 text-[#F4EBD0] hover:text-white bg-black bg-opacity-30 p-2 rounded-full"
-    whileHover={{ scale: 1.1 }}
-    whileTap={{ scale: 0.9 }}
-  >
-    <Layers size={24} />
-  </motion.button>
-);
-
-const ScrollableOverlay = ({ 
-  messages, 
-  isVisible, 
-  onToggle, 
-  scrollPageToBottom
-}) => {
-  useEffect(() => {
-    if (isVisible) {
-      scrollPageToBottom();
-    }
-  }, [isVisible, scrollPageToBottom]);
-
-  return (
-    <AnimatePresence>
-      {isVisible && (
-        <motion.div 
-          className="absolute inset-0 bottom-28 z-20"
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0.9, opacity: 0 }}
-          transition={{ duration: 0.2 }}
-        >
-          <div className="w-full h-full bg-black bg-opacity-30 backdrop-filter backdrop-blur-md border-[#F4EBD0] border-opacity-50 rounded-lg overflow-hidden flex flex-col">
-            <div className="flex-grow overflow-y-auto p-6" style={{ minHeight: '60vh' }}>
-              <div className="space-y-4">
-                {messages.map((message, index) => (
-                  <div key={index} className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-[70%] p-3 rounded-2xl ${
-                      message.type === 'user' 
-                        ? 'bg-[#F4EBD0] text-black' 
-                        : 'bg-black bg-opacity-30 backdrop-blur-md text-[#F4EBD0] border-2 border-[#F4EBD0]'
-                    }`}>
-                      <MessageContent content={message.content} isUser={message.type === 'user'} />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  );
-};
-
-const FixedOverlay = ({ isFileUploaded, fileName, onToggleView, onRemoveFile, sidebarWidth }) => (
-  <div 
-    className="fixed top-0 z-50 flex items-center justify-between bg-black bg-opacity-70 backdrop-blur-md rounded-lg p-2"
-    style={{
-      left: `calc(${sidebarWidth}px + 1.5rem)`,
-      right: '1.5rem',
-      maxWidth: 'calc(100% - 3rem - ${sidebarWidth}px)',
-    }}
-  >
-    <h1 className="text-2xl font-bold text-[#F4EBD0]">TableTalk</h1>
-    <div className="flex items-center">
-      <ToggleViewButton onClick={onToggleView} isOverlayVisible={false} />
-      {isFileUploaded && (
-        <div className="text-[#F4EBD0] text-sm ml-2 truncate">
-          File: {fileName}
-          <button 
-            onClick={onRemoveFile}
-            className="ml-2 text-red-500 hover:text-red-700"
-          >
-            X
-          </button>
-        </div>
-      )}
-    </div>
-  </div>
-);
-
-const handleFileUpload = async (file: File, sessionId: string | null) => {
-  if (!sessionId) return; // Ensure we have a session ID
-
-  const formData = new FormData();
-  formData.append('file', file);
-  formData.append('session_id', sessionId);
-
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 seconds timeout
-
-  try {
-    const response = await fetch('http://localhost:8000/upload_and_query', {
-      method: 'POST',
-      body: formData,
-      signal: controller.signal
-    });
-
-    if (!response.ok) {
-      throw new Error('Upload failed');
-    }
-
-    const result = await response.json();
-    console.log('Upload successful:', result);
-
-    setFileUploaded(true);
-    setUploadedFile(file);
-
-  } catch (error) {
-    if (error.name === 'AbortError') {
-      console.log('Upload aborted');
-    } else {
-      console.error('Upload error:', error);
-    }
-    // Handle the error (e.g., show error message to user)
-  } finally {
-    clearTimeout(timeoutId);
-  }
-};
-
 export function ModernChatbotUi() {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [isRecording, setIsRecording] = useState(false)
   const [isPlaying, setIsPlaying] = useState(false)
-  const [uploadProgress, setUploadProgress] = useState(0)
-  const [isUploading, setIsUploading] = useState(false)
   const [uploadedFile, setUploadedFile] = useState<File | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [fileUploaded, setFileUploaded] = useState(false);
@@ -823,3 +431,5 @@ export function ModernChatbotUi() {
     </div>
   );
 }
+```
+</rewritten_file>
