@@ -1,6 +1,5 @@
 import os
 import shutil
-from dotenv import load_dotenv
 import warnings
 from langchain.chat_models import ChatOpenAI
 from langchain_community.agent_toolkits import create_sql_agent
