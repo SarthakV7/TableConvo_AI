@@ -430,8 +430,6 @@ export function ModernChatbotUi() {
   const [input, setInput] = useState('')
   const [isRecording, setIsRecording] = useState(false)
   const [isPlaying, setIsPlaying] = useState(false)
-  const [uploadProgress, setUploadProgress] = useState(0)
-  const [isUploading, setIsUploading] = useState(false)
   const [uploadedFile, setUploadedFile] = useState<File | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [fileUploaded, setFileUploaded] = useState(false);
@@ -461,12 +459,6 @@ export function ModernChatbotUi() {
     
     setSessionId(existingSessionId);
   }, []);
-
-  const scrollToBottom = () => {
-    if (chatContainerRef.current) {
-      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
-    }
-  };
 
   const scrollPageToBottom = () => {
     window.scrollTo({
@@ -503,11 +495,6 @@ export function ModernChatbotUi() {
   }, []);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop })
-
-  const handleMouseMove = (event: React.MouseEvent) => {
-    cursorX.set(event.clientX)
-    cursorY.set(event.clientY)
-  }
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -574,25 +561,9 @@ export function ModernChatbotUi() {
     }
   };
 
-  const toggleRecording = () => {
-    setIsRecording(!isRecording)
-    // Here you would implement actual voice recording logic
-  }
-
-  const togglePlayback = () => {
-    if (audioRef.current) {
-      if (isPlaying) {
-        audioRef.current.pause()
-      } else {
-        audioRef.current.play()
-      }
-      setIsPlaying(!isPlaying)
-    }
-  }
-
-  const toggleScrollableOverlay = (e) => {
+  const toggleScrollableOverlay = (_e) => {
     // Prevent toggling when clicking on the file upload area
-    if (e.target.closest('.file-upload-area')) return;
+    if (_e.target.closest('.file-upload-area')) return;
     setIsScrollableOverlayVisible(!isScrollableOverlayVisible);
   };
 
