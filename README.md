@@ -16,6 +16,7 @@ TableTalk is a comprehensive AI-powered chatbot interface that combines natural 
 - **SQL Database Integration**: Directly queries and analyzes SQL databases to provide data-driven responses.
 - **Data Visualization Suggestions**: Offers appropriate chart type recommendations based on conversation context.
 - **Dynamic Database Loading**: Flexibly works with various data sources and adapts to changing data structures.
+- **SQL Query Transparency**: Provides users with the exact SQL queries used to extract data for the chatbot's responses, promoting transparency and trust.
 
 ## Tech Stack
 
@@ -87,6 +88,7 @@ Python, FastAPI, SQLite, SQLAlchemy, LangChain, OpenAI GPT models
   - View and interact with AI-generated data visualizations
   - Toggle between light and dark themes
   - Access additional information and settings through the collapsible sidebar
+  - Click on the SQL query button to view the exact SQL queries used to extract data for the chatbot's responses
 - Interact with the chatbot through the provided API endpoints:
   - Upload and query databases
   - Engage in AI-powered conversations
