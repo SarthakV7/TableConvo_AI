@@ -1,6 +1,7 @@
 import os
 import shutil
 import warnings
+import requests
 from langchain.chat_models import ChatOpenAI
 from langchain_google_genai import ChatGoogleGenerativeAI  # Add this import
 from langchain_community.agent_toolkits import create_sql_agent
@@ -27,6 +28,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+gemini_api_key = fetch_gemini_api_key()
+
 # Update the function to include model_name and handle both ChatGPT and Gemini Pro
 def create_llm_instances(api_key, model_name):
     if model_name.startswith("gpt-"):
@@ -43,11 +46,11 @@ def create_llm_instances(api_key, model_name):
         return ChatGoogleGenerativeAI(
             model=model_name,
             temperature=0,
-            google_api_key=api_key,
+            google_api_key=gemini_api_key,
         ), ChatGoogleGenerativeAI(
             model=model_name,
             temperature=0.7,
-            google_api_key=api_key,
+            google_api_key=gemini_api_key,
         )
     else:
         raise ValueError(f"Unsupported model: {model_name}")
@@ -114,7 +117,7 @@ if __name__ == "__main__":
     
     # Set up argument parser
     parser = argparse.ArgumentParser(description="Run the FastAPI server with API key and model name")
-    parser.add_argument("--api_key", required=True, help="API key (OpenAI or Google)")
+    parser.add_argument("--api_key", help="API key (required for OpenAI models)")
     parser.add_argument("--model_name", default="gpt-4-mini", help="Model name (e.g., gpt-4-mini, gemini-pro)")
     args = parser.parse_args()
     
