@@ -320,11 +320,13 @@ const ScrollableOverlay = ({
   onToggle, 
   scrollPageToBottom
 }) => {
+  const messageContainerRef = useRef<HTMLDivElement>(null); // Add a ref for the message container
+
   useEffect(() => {
-    if (isVisible) {
-      scrollPageToBottom();
+    if (isVisible && messageContainerRef.current) {
+      messageContainerRef.current.scrollTop = messageContainerRef.current.scrollHeight; // Scroll to the bottom
     }
-  }, [isVisible, scrollPageToBottom]);
+  }, [messages, isVisible]); // Trigger scroll when messages change
 
   return (
     <AnimatePresence>
@@ -336,7 +338,7 @@ const ScrollableOverlay = ({
           exit={{ scale: 0.9, opacity: 0 }}
           transition={{ duration: 0.2 }}
         >
-          <div className="w-full h-full bg-black bg-opacity-30 backdrop-filter backdrop-blur-md border-[#F4EBD0] border-opacity-50 rounded-lg overflow-hidden flex flex-col">
+          <div ref={messageContainerRef} className="w-full h-full bg-black bg-opacity-30 backdrop-filter backdrop-blur-md border-[#F4EBD0] border-opacity-50 rounded-lg overflow-hidden flex flex-col">
             <div className="flex-grow overflow-y-auto p-6" style={{ minHeight: '60vh' }}>
               <div className="space-y-4">
                 {messages.map((message, index) => (
@@ -444,6 +446,24 @@ export function ModernChatbotUi() {
   const [currentVisualization, setCurrentVisualization] = useState<VisualizeData | null>(null)
   const [sqlQuery, setSqlQuery] = useState<string | null>(null)
   const [isSqlQueryVisible, setIsSqlQueryVisible] = useState(false)
+
+  useEffect(() => {
+    // Scroll to the top of the page when the component mounts
+    window.scrollTo(0, 0);
+
+    // Prevent default scrolling behavior
+    const handleTouchMove = (event) => {
+      event.preventDefault();
+    };
+
+    // Add event listener to prevent scrolling
+    window.addEventListener('touchmove', handleTouchMove, { passive: false });
+
+    // Cleanup the event listener on component unmount
+    return () => {
+      window.removeEventListener('touchmove', handleTouchMove);
+    };
+  }, []);
 
   useEffect(() => {
     setSidebarWidth(isSidebarOpen ? 256 : 32);
@@ -820,3 +840,17 @@ export function ModernChatbotUi() {
     </div>
   );
 }
+
+// Add media queries in your CSS or Tailwind configuration
+<style jsx>{`
+  @media (max-width: 768px) {
+    .fixed-overlay {
+      flex-direction: column;
+      align-items: flex-start;
+      padding: 1rem;
+    }
+    .message-container {
+      height: 50vh; // Adjust height for smaller screens
+    }
+  }
+`}</style>

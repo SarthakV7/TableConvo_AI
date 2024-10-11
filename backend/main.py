@@ -61,7 +61,8 @@ async def upload_and_query(
     print("session_id:", session_id)
     
     file_path = f"./data/{file.filename}"
-    db_path = "./data/test_sqldb.db"
+    # Change db_path to use session_id instead of file name
+    db_path = f"./data/{session_id}_sqldb.db"  # {{ edit_1 }}
     
     try:
         if os.path.exists(file_path):
