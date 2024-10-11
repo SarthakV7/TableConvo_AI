@@ -1,8 +1,8 @@
-# TableTalk: AI-Powered Data Visualization and Database Chatbot
+# TableConvoAI: AI-Powered Data Visualization and Database Chatbot
 
 ## Overview
 
-TableTalk is a comprehensive AI-powered chatbot interface that combines natural language processing with powerful data visualization capabilities and database integration. The frontend is built using React and Next.js, offering users an intuitive platform for interacting with AI, analyzing data, and generating insightful visualizations. The backend is built with Python, leveraging state-of-the-art language models and database technologies to create a versatile and intelligent conversational interface.
+TableConvoAI is a comprehensive AI-powered chatbot interface that combines natural language processing with powerful data visualization capabilities and database integration. The frontend is built using React and Next.js, offering users an intuitive platform for interacting with AI, analyzing data, and generating insightful visualizations. The backend is built with Python, leveraging state-of-the-art language models and database technologies to create a versatile and intelligent conversational interface.
 
 ## Features
 
@@ -33,7 +33,7 @@ Python, FastAPI, SQLite, SQLAlchemy, LangChain, OpenAI GPT models
 1. Clone the repository:
    ```bash
    git clone <repository-url>
-   cd tabletalk
+   cd TableConvoAI
    ```
 
 2. Install dependencies:
@@ -110,10 +110,10 @@ Both the frontend and backend projects include Docker support for easy deploymen
 
 ```bash
 # Build the Docker image
-docker build -t tabletalk .
+docker build -t TableConvoAI .
 
 # Run the Docker container
-docker run -p 3000:3000 tabletalk
+docker run -p 3000:3000 TableConvoAI
 ```
 
 ### Backend
@@ -130,7 +130,7 @@ Make sure to replace `your_api_key` with your actual OpenAI API key. You can als
 
 ## Contributing
 
-Contributions to improve TableTalk or extend its capabilities are welcome. Please feel free to submit pull requests or open issues for bugs and feature requests.
+Contributions to improve TableConvoAI or extend its capabilities are welcome. Please feel free to submit pull requests or open issues for bugs and feature requests.
 
 ## License
 
